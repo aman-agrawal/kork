@@ -158,6 +158,8 @@ public class ExpressionTransform {
       String escapedExpressionString = null;
       Throwable exception = null;
       try {
+        // Validate expression content to prevent injection attacks
+        validateExpressionSafety(preprocessed);
         Expression exp = parser.parseExpression(preprocessed, parserContext);
         escapedExpressionString = escapeExpression(exp);
         if (exp instanceof CompositeStringExpression) {
@@ -263,5 +265,38 @@ public class ExpressionTransform {
     }
 
     return expression.getExpressionString();
+  }
+
+  /**
+   * Validates expression content to prevent code injection attacks.
+   * Checks for potentially dangerous patterns in expression strings.
+   * 
+   * @param expressionString the expression string to validate
+   * @throws IllegalArgumentException if the expression contains unsafe patterns
+   */
+  private void validateExpressionSafety(String expressionString) {
+    if (expressionString == null) {
+      return;
+    }
+    
+    // Check for potentially dangerous patterns that could indicate injection attempts
+    String[] dangerousPatterns = {
+      "T(java.lang.Runtime)",
+      "T(java.lang.System)", 
+      "T(java.lang.Class)",
+      "T(java.lang.ProcessBuilder)",
+      "getClass(",
+      ".class.forName",
+      "java.lang.Runtime",
+      "java.lang.System",
+      "java.lang.ProcessBuilder"
+    };
+    
+    String lowerExpression = expressionString.toLowerCase();
+    for (String pattern : dangerousPatterns) {
+      if (lowerExpression.contains(pattern.toLowerCase())) {
+        throw new IllegalArgumentException("Expression contains potentially unsafe pattern: " + pattern);
+      }
+    }
   }
 }
