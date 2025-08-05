@@ -64,7 +64,7 @@ public final class StandardCrypto {
 
   public static SSLContext getTLSContext() {
     try {
-      return SSLContext.getInstance("TLS");
+      return SSLContext.getInstance("TLSv1.2");
     } catch (NoSuchAlgorithmException e) {
       throw new NestedSecurityRuntimeException(e);
     }
